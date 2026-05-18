@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Urubu 360 — Cachoeira do Urubu</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lato:wght@300;400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --water: #1b6ca8;
+    --water-dark: #114f7e;
+    --water-light: #5aabdc;
+    --water-pale: #d6edf9;
+    --leaf: #2a7d4f;
+    --leaf-light: #4db878;
+    --sand: #c9913a;
+    --sand-light: #f0d080;
+    --rock: #5a5346;
+    --white: #f8faf9;
+    --text: #1e2d25;
+    --muted: #6b7e74;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--white);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--water-dark);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 60px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .nav-brand {
+    font-family: 'Abril Fatface', serif;
+    font-size: 1.4rem; color: #fff; letter-spacing: .03em;
+  }
+  .nav-brand span { color: var(--sand-light); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 8px 22px; border: none; border-radius: 30px;
+    font-family: 'DM Mono', monospace; font-size: .78rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+    background: transparent; color: rgba(255,255,255,.6);
+  }
+  .nav-tab.active {
+    background: var(--sand); color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .nav-tab:hover:not(.active) { color: #fff; background: rgba(255,255,255,.1); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(160deg, var(--water-dark) 0%, var(--water) 55%, var(--leaf) 100%);
+    padding: 72px 32px 80px;
+    text-align: center;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 30px; padding: 6px 18px; margin-bottom: 20px;
+    font-family: 'DM Mono', monospace; font-size: .75rem;
+    color: rgba(255,255,255,.9); letter-spacing: .12em; text-transform: uppercase;
+  }
+  .hero h1 {
+    font-family: 'Abril Fatface', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    color: #fff; line-height: 1.05; margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--sand-light); }
+  .hero p {
+    max-width: 560px; margin: 0 auto 32px;
+    font-size: 1.05rem; color: rgba(255,255,255,.82); line-height: 1.7;
+  }
+  .hero-waves {
+    position: absolute; bottom: -2px; left: 0; width: 100%;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── FORM PAGE ── */
+  .form-wrap {
+    max-width: 700px; margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .section-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #deeaf0;
+    box-shadow: 0 2px 16px rgba(27,108,168,.07);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px; padding-bottom: 16px;
+    border-bottom: 2px solid var(--water-pale);
+  }
+  .section-num {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--water); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: .85rem; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Abril Fatface', serif;
+    font-size: 1.25rem; color: var(--water-dark);
+  }
+
+  .q-block { margin-bottom: 28px; }
+  .q-block:last-child { margin-bottom: 0; }
+  .q-label {
+    display: block; font-size: .82rem; font-family: 'DM Mono', monospace;
+    color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .q-num { color: var(--water); margin-right: 6px; }
+
+  /* radio/check */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; padding: 10px 14px;
+    border-radius: 10px; transition: background .15s;
+    border: 1.5px solid #dde8ef;
+    background: #fff;
+  }
+  .opt:hover { background: var(--water-pale); border-color: var(--water-light); }
+  .opt.selected { background: var(--water-pale); border-color: var(--water); }
+  .opt-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid #b0c8d8; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .opt.selected .opt-dot { background: var(--water); border-color: var(--water); }
+  .opt-dot::after {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: #fff; opacity: 0; transition: opacity .15s;
+  }
+  .opt.selected .opt-dot::after { opacity: 1; }
+  .opt-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid #b0c8d8; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .opt.selected .opt-box { background: var(--leaf); border-color: var(--leaf); }
+  .opt-box::after {
+    content: '✓'; color: #fff; font-size: .7rem; opacity: 0; transition: opacity .15s;
+  }
+  .opt.selected .opt-box::after { opacity: 1; }
+  .opt-text { font-size: .95rem; color: var(--text); }
+
+  /* stars */
+  .stars { display: flex; align-items: center; gap: 6px; }
+  .star {
+    font-size: 2rem; cursor: pointer; color: #d4dce0;
+    transition: all .15s; user-select: none;
+  }
+  .star.lit { color: var(--sand); transform: scale(1.1); }
+  .star-label { font-family: 'DM Mono', monospace; font-size: .8rem; color: var(--sand); margin-left: 6px; }
+
+  /* textarea */
+  .q-textarea {
+    width: 100%; padding: 14px 16px;
+    border: 1.5px solid #dde8ef; border-radius: 10px;
+    font-family: 'Lato', sans-serif; font-size: .95rem; color: var(--text);
+    background: #fff; resize: vertical; min-height: 90px;
+    outline: none; transition: border .2s;
+  }
+  .q-textarea:focus { border-color: var(--water); }
+
+  /* error */
+  .err { color: #c0392b; font-size: .78rem; margin-top: 6px; font-family: 'DM Mono', monospace; display: none; }
+  .err.show { display: block; }
+
+  /* submit btn */
+  .btn-submit {
+    display: block; width: 100%; padding: 18px;
+    background: linear-gradient(135deg, var(--water), var(--water-dark));
+    color: #fff; border: none; border-radius: 12px;
+    font-family: 'DM Mono', monospace; font-size: 1rem;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 16px rgba(27,108,168,.35);
+    margin-top: 32px;
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(27,108,168,.4); }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* success */
+  .success-box {
+    text-align: center; padding: 80px 24px;
+    animation: fadeUp .5s ease;
+  }
+  .success-icon { font-size: 4rem; margin-bottom: 16px; }
+  .success-box h2 {
+    font-family: 'Abril Fatface', serif;
+    font-size: 2rem; color: var(--leaf); margin-bottom: 12px;
+  }
+  .success-box p { color: var(--muted); font-size: 1rem; }
+
+  /* ── DASHBOARD ── */
+  .dash-wrap { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+  .dash-title {
+    font-family: 'Abril Fatface', serif;
+    font-size: 2rem; color: var(--water-dark); margin-bottom: 6px;
+  }
+  .dash-sub { font-family: 'DM Mono', monospace; font-size: .78rem; color: var(--muted); margin-bottom: 36px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .kpi {
+    background: #fff; border: 1px solid #deeaf0;
+    border-radius: 14px; padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(27,108,168,.06);
+  }
+  .kpi-label { font-family: 'DM Mono', monospace; font-size: .68rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+  .kpi-value { font-family: 'Abril Fatface', serif; font-size: 2.4rem; line-height: 1; }
+  .kpi-sub { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media(max-width: 640px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: #fff; border: 1px solid #deeaf0;
+    border-radius: 14px; padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(27,108,168,.06);
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .chart-label { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 16px; }
+  .chart-canvas { width: 100% !important; max-height: 220px; }
+
+  /* table */
+  .resp-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .resp-table th { font-family: 'DM Mono', monospace; font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 8px 10px; border-bottom: 2px solid #deeaf0; text-align: left; }
+  .resp-table td { padding: 10px 10px; border-bottom: 1px solid #f0f5f8; color: var(--text); }
+  .resp-table tr:last-child td { border-bottom: none; }
+  .resp-table tr:hover td { background: var(--water-pale); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: .72rem; font-family: 'DM Mono', monospace;
+  }
+  .badge-sim { background: #d4f5e3; color: #1a6e40; }
+  .badge-nao { background: #fde8e6; color: #a02020; }
+  .badge-talvez { background: #fff3d4; color: #7a5a10; }
+  .badge-mm { background: #e8ecf2; color: #4a5a72; }
+
+  /* info banners */
+  .info-banner {
+    background: var(--water-pale); border-left: 4px solid var(--water);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin-bottom: 20px;
+    font-size: .88rem; color: var(--water-dark); line-height: 1.5;
+  }
+
+  /* responsive */
+  @media(max-width: 520px) {
+    .section-card { padding: 22px 18px; }
+    nav { padding: 0 16px; }
+    .nav-brand { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Urubu <span>360</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('form')">Formulário</button>
+    <button class="nav-tab" onclick="showPage('dash')">Dashboard</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ FORM PAGE ══════════════════ -->
+<div id="page-form" class="page active">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">🌊 Esperantina — PI</div>
+    <h1>Cachoeira do <span>Urubu</span></h1>
+    <p>Este formulário faz parte de um projeto de empreendedorismo voltado para melhorar a experiência dos visitantes. As respostas são anônimas e serão usadas apenas para fins de pesquisa.</p>
+    <svg class="hero-waves" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z" fill="#f8faf9"/>
+    </svg>
+  </div>
+
+  <!-- Form -->
+  <div class="form-wrap" id="form-container">
+
+    <!-- SEÇÃO 1 -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">1</div>
+        <div class="section-title">Perfil do Visitante</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q1.</span> Você já visitou a Cachoeira do Urubu?</span>
+        <div class="options" id="q1"></div>
+        <div class="err" id="err-q1">Por favor, selecione uma opção.</div>
+      </div>
+
+      <div class="q-block" id="block-q2-q3">
+        <div class="q-block">
+          <span class="q-label"><span class="q-num">Q2.</span> Qual sua idade?</span>
+          <div class="options" id="q2"></div>
+          <div class="err" id="err-q2">Por favor, selecione uma opção.</div>
+        </div>
+        <div class="q-block">
+          <span class="q-label"><span class="q-num">Q3.</span> Você foi à cachoeira com:</span>
+          <div class="options" id="q3"></div>
+          <div class="err" id="err-q3">Por favor, selecione uma opção.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 2 -->
+    <div class="section-card" id="section-exp">
+      <div class="section-head">
+        <div class="section-num">2</div>
+        <div class="section-title">Experiência na Cachoeira</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q4.</span> Como você avalia sua experiência na cachoeira?</span>
+        <div class="stars" id="q4-stars">
+          <span class="star" data-v="1" onclick="setStar(1)">★</span>
+          <span class="star" data-v="2" onclick="setStar(2)">★</span>
+          <span class="star" data-v="3" onclick="setStar(3)">★</span>
+          <span class="star" data-v="4" onclick="setStar(4)">★</span>
+          <span class="star" data-v="5" onclick="setStar(5)">★</span>
+          <span class="star-label" id="star-label"></span>
+        </div>
+        <div class="err" id="err-q4">Por favor, avalie sua experiência.</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q5.</span> Você achou o local organizado?</span>
+        <div class="options" id="q5"></div>
+        <div class="err" id="err-q5">Por favor, selecione uma opção.</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q6.</span> Você percebeu presença de lixo no local?</span>
+        <div class="options" id="q6"></div>
+        <div class="err" id="err-q6">Por favor, selecione uma opção.</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 3 -->
+    <div class="section-card" id="section-seg">
+      <div class="section-head">
+        <div class="section-num">3</div>
+        <div class="section-title">Segurança</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q7.</span> Você se sentiu seguro(a) durante a visita?</span>
+        <div class="options" id="q7"></div>
+        <div class="err" id="err-q7">Por favor, selecione uma opção.</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q8.</span> Existiam placas indicando áreas perigosas?</span>
+        <div class="options" id="q8"></div>
+        <div class="err" id="err-q8">Por favor, selecione uma opção.</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q9.</span> Você acha que faltam informações sobre locais seguros e perigosos?</span>
+        <div class="options" id="q9"></div>
+        <div class="err" id="err-q9">Por favor, selecione uma opção.</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 4 -->
+    <div class="section-card" id="section-info">
+      <div class="section-head">
+        <div class="section-num">4</div>
+        <div class="section-title">Informação</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q10.</span> Você sentiu falta de informações sobre o local?</span>
+        <div class="options" id="q10"></div>
+        <div class="err" id="err-q10">Por favor, selecione uma opção.</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q11.</span> Que tipo de informação você gostaria de ter? <em style="font-style:normal;opacity:.6">(múltipla escolha)</em></span>
+        <div class="options" id="q11"></div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q12.</span> Você usaria QR Codes para acessar informações no local?</span>
+        <div class="options" id="q12"></div>
+        <div class="err" id="err-q12">Por favor, selecione uma opção.</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 5 -->
+    <div class="section-card" id="section-mel">
+      <div class="section-head">
+        <div class="section-num">5</div>
+        <div class="section-title">Melhorias</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q13.</span> O que mais te incomodou na visita?</span>
+        <textarea class="q-textarea" id="q13" placeholder="Descreva o que te incomodou..."></textarea>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q14.</span> Se você pudesse melhorar UMA coisa na cachoeira, o que seria?</span>
+        <textarea class="q-textarea" id="q14" placeholder="Sua sugestão principal..."></textarea>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q15.</span> O que deixaria a experiência mais interessante para você?</span>
+        <textarea class="q-textarea" id="q15" placeholder="Ideias, atividades, estrutura..."></textarea>
+      </div>
+    </div>
+
+    <!-- SEÇÃO FINAL -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-num">✓</div>
+        <div class="section-title">Considerações Finais</div>
+      </div>
+
+      <div class="q-block">
+        <span class="q-label"><span class="q-num">Q16.</span> Você acha que melhorias no local podem atrair mais turistas?</span>
+        <div class="options" id="q16"></div>
+        <div class="err" id="err-q16">Por favor, selecione uma opção.</div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="submitForm()">🌊 Enviar Pesquisa</button>
+  </div>
+
+  <!-- Success -->
+  <div class="success-box" id="success-box" style="display:none">
+    <div class="success-icon">🌊</div>
+    <h2>Obrigado pela resposta!</h2>
+    <p style="margin-bottom:24px">Sua contribuição ajuda a melhorar a Cachoeira do Urubu para todos.</p>
+    <button class="btn-submit" style="max-width:260px;margin:0 auto" onclick="showPage('dash')">Ver Dashboard →</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════ DASHBOARD PAGE ══════════════════ -->
+<div id="page-dash" class="page">
+  <div class="dash-wrap">
+    <div class="dash-title">📊 Dashboard — Urubu 360</div>
+    <div class="dash-sub" id="dash-sub">Carregando dados...</div>
+
+    <div class="info-banner" id="dash-banner"></div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Charts row 1 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-label">Faixa Etária dos Visitantes</div>
+        <canvas id="ch-idade" class="chart-canvas"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Companhia na Visita</div>
+        <canvas id="ch-comp" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts row 2 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-label">Organização do Local</div>
+        <canvas id="ch-org" class="chart-canvas"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Presença de Lixo</div>
+        <canvas id="ch-lixo" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts row 3 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-label">Segurança Percebida</div>
+        <canvas id="ch-seg" class="chart-canvas"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">QR Codes para Informação</div>
+        <canvas id="ch-qr" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart wide -->
+    <div class="chart-grid">
+      <div class="chart-card wide">
+        <div class="chart-label">Tipos de Informação Desejados</div>
+        <canvas id="ch-tipos" class="chart-canvas" style="max-height:240px"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart turismo + avaliação -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-label">Melhorias Atraem Turistas?</div>
+        <canvas id="ch-tur" class="chart-canvas"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Avaliação Geral (estrelas)</div>
+        <canvas id="ch-stars" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="chart-card wide" style="margin-top:0;overflow-x:auto">
+      <div class="chart-label">Respostas Recentes</div>
+      <table class="resp-table" id="resp-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Idade</th><th>Companhia</th><th>Avaliação</th>
+            <th>Organizado</th><th>Seguro</th><th>QR Code</th><th>Turismo</th>
+          </tr>
+        </thead>
+        <tbody id="resp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SCRIPT ══════════════════ -->
+<script>
+// ── SEED DATA ──────────────────────────────────────────────────────────────
+let responses = [
+  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Um pouco",seguro:"Sim",placas:"Não",faltaInfo:"Sim",tiposInfo:["Mapa do local","Áreas seguras/perigosas"],qrcode:"Sim",incomodo:"Falta de sinalização",melhoria:"Mais placas",interessante:"Trilha guiada",turismo:"Sim"},
+  {visitou:"Sim",idade:"15 a 18",companhia:"Família",experiencia:4,organizado:"Mais ou menos",lixo:"Sim, bastante",seguro:"Mais ou menos",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Pontos de apoio (comida, banheiro)","Mapa do local"],qrcode:"Talvez",incomodo:"Lixo espalhado",melhoria:"Limpeza",interessante:"Banheiros limpos",turismo:"Sim"},
+  {visitou:"Sim",idade:"26 a 35",companhia:"Família",experiencia:3,organizado:"Não",lixo:"Sim, bastante",seguro:"Não",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","História da cachoeira"],qrcode:"Sim",incomodo:"Falta de segurança",melhoria:"Vigilância",interessante:"Guia turístico",turismo:"Sim"},
+  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Não",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["Curiosidades/lendas"],qrcode:"Sim",incomodo:"Acesso difícil",melhoria:"Estrada melhor",interessante:"QR Codes informativos",turismo:"Sim"},
+  {visitou:"Sim",idade:"36+",companhia:"Família",experiencia:4,organizado:"Mais ou menos",lixo:"Um pouco",seguro:"Sim",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Mapa do local","Pontos de apoio (comida, banheiro)"],qrcode:"Talvez",incomodo:"Sem lanchonete",melhoria:"Quiosques",interessante:"Estrutura de apoio",turismo:"Sim"},
+  {visitou:"Sim",idade:"15 a 18",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Um pouco",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["Curiosidades/lendas","História da cachoeira"],qrcode:"Sim",incomodo:"Muito cheio",melhoria:"Controle de acesso",interessante:"Eventos culturais",turismo:"Talvez"},
+  {visitou:"Sim",idade:"26 a 35",companhia:"Sozinho(a)",experiencia:2,organizado:"Não",lixo:"Sim, bastante",seguro:"Não",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","Mapa do local"],qrcode:"Não",incomodo:"Lixo e insegurança",melhoria:"Fiscalização",interessante:"Preservação",turismo:"Sim"},
+  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:4,organizado:"Sim",lixo:"Não",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["História da cachoeira"],qrcode:"Sim",incomodo:"Sem estacionamento",melhoria:"Estacionamento",interessante:"App com mapa",turismo:"Sim"},
+  {visitou:"Sim",idade:"Menos de 15",companhia:"Família",experiencia:5,organizado:"Mais ou menos",lixo:"Um pouco",seguro:"Sim",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Curiosidades/lendas","Mapa do local"],qrcode:"Sim",incomodo:"Não tem sorveteria",melhoria:"Lanchonete",interessante:"Atividades para crianças",turismo:"Sim"},
+  {visitou:"Sim",idade:"26 a 35",companhia:"Amigos",experiencia:3,organizado:"Mais ou menos",lixo:"Sim, bastante",seguro:"Mais ou menos",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","Pontos de apoio (comida, banheiro)"],qrcode:"Talvez",incomodo:"Muito lixo",melhoria:"Coleta seletiva",interessante:"Educação ambiental",turismo:"Sim"},
+];
+
+// ── FORM STATE ──────────────────────────────────────────────────────────────
+const state = {
+  q1: null, q2: null, q3: null, q4: 0,
+  q5: null, q6: null, q7: null, q8: null, q9: null,
+  q10: null, q11: [], q12: null, q13: "", q14: "", q15: "", q16: null,
+};
+
+const starLabels = {1:"Muito ruim",2:"Ruim",3:"Regular",4:"Boa",5:"Muito boa"};
+let chartsBuilt = false;
+let chartInstances = {};
+
+// ── BUILD OPTIONS ────────────────────────────────────────────────────────────
+function radio(id, options, key) {
+  const el = document.getElementById(id);
+  options.forEach(opt => {
+    const d = document.createElement('div');
+    d.className = 'opt';
+    d.innerHTML = `<div class="opt-dot"></div><span class="opt-text">${opt}</span>`;
+    d.onclick = () => {
+      state[key] = opt;
+      el.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+      d.classList.add('selected');
+      document.getElementById('err-' + id).classList.remove('show');
+      if (id === 'q1') handleQ1(opt);
+    };
+    el.appendChild(d);
+  });
+}
+
+function checkbox(id, options, key) {
+  const el = document.getElementById(id);
+  options.forEach(opt => {
+    const d = document.createElement('div');
+    d.className = 'opt';
+    d.innerHTML = `<div class="opt-box"></div><span class="opt-text">${opt}</span>`;
+    d.onclick = () => {
+      if (state[key].includes(opt)) {
+        state[key] = state[key].filter(v => v !== opt);
+        d.classList.remove('selected');
+      } else {
+        state[key].push(opt);
+        d.classList.add('selected');
+      }
+    };
+    el.appendChild(d);
+  });
+}
+
+function handleQ1(val) {
+  const extra = document.getElementById('block-q2-q3');
+  const s2 = document.getElementById('section-exp');
+  const s3 = document.getElementById('section-seg');
+  const s4 = document.getElementById('section-info');
+  const s5 = document.getElementById('section-mel');
+  if (val === 'Não') {
+    extra.style.display = 'none';
+    s2.style.display = 'none'; s3.style.display = 'none';
+    s4.style.display = 'none'; s5.style.display = 'none';
+  } else {
+    extra.style.display = 'block';
+    s2.style.display = 'block'; s3.style.display = 'block';
+    s4.style.display = 'block'; s5.style.display = 'block';
+  }
+}
+
+function setStar(val) {
+  state.q4 = val;
+  document.querySelectorAll('.star').forEach((s, i) => {
+    s.classList.toggle('lit', i < val);
+  });
+  document.getElementById('star-label').textContent = starLabels[val];
+  document.getElementById('err-q4').classList.remove('show');
+}
+
+// hover stars
+document.querySelectorAll('.star').forEach(s => {
+  s.addEventListener('mouseenter', () => {
+    const v = +s.dataset.v;
+    document.querySelectorAll('.star').forEach((st, i) => st.classList.toggle('lit', i < v));
+    document.getElementById('star-label').textContent = starLabels[v];
+  });
+  s.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.star').forEach((st, i) => st.classList.toggle('lit', i < state.q4));
+    document.getElementById('star-label').textContent = state.q4 ? starLabels[state.q4] : '';
+  });
+});
+
+// ── INIT OPTIONS ─────────────────────────────────────────────────────────────
+radio('q1',  ['Sim','Não'], 'q1');
+radio('q2',  ['Menos de 15','15 a 18','19 a 25','26 a 35','36+'], 'q2');
+radio('q3',  ['Amigos','Família','Sozinho(a)','Outro'], 'q3');
+radio('q5',  ['Sim','Mais ou menos','Não'], 'q5');
+radio('q6',  ['Sim, bastante','Um pouco','Não'], 'q6');
+radio('q7',  ['Sim','Mais ou menos','Não'], 'q7');
+radio('q8',  ['Sim','Não','Não percebi'], 'q8');
+radio('q9',  ['Sim','Não'], 'q9');
+radio('q10', ['Sim','Não'], 'q10');
+checkbox('q11', ['Mapa do local','Áreas seguras/perigosas','História da cachoeira','Curiosidades/lendas','Pontos de apoio (comida, banheiro)','Outro'], 'q11');
+radio('q12', ['Sim','Talvez','Não'], 'q12');
+radio('q16', ['Sim','Não','Talvez'], 'q16');
+
+// ── SUBMIT ───────────────────────────────────────────────────────────────────
+function submitForm() {
+  let valid = true;
+  const required = ['q1','q2','q3','q5','q6','q7','q8','q9','q10','q12','q16'];
+  if (!state.q1) { document.getElementById('err-q1').classList.add('show'); valid = false; }
+
+  if (state.q1 === 'Sim') {
+    required.forEach(k => {
+      if (!state[k]) {
+        const e = document.getElementById('err-' + k);
+        if (e) { e.classList.add('show'); valid = false; }
+      }
+    });
+    if (!state.q4) { document.getElementById('err-q4').classList.add('show'); valid = false; }
+  }
+
+  if (!valid) {
+    document.querySelector('.err.show')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  state.q13 = document.getElementById('q13').value;
+  state.q14 = document.getElementById('q14').value;
+  state.q15 = document.getElementById('q15').value;
+
+  responses.push({ ...state, tiposInfo: [...state.q11] });
+
+  document.getElementById('form-container').style.display = 'none';
+  document.getElementById('success-box').style.display = 'block';
+  chartsBuilt = false;
+}
+
+// ── PAGE SWITCH ───────────────────────────────────────────────────────────────
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && p === 'form') || (i === 1 && p === 'dash'));
+  });
+  document.getElementById('page-' + p).classList.add('active');
+  if (p === 'dash') buildDashboard();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+const COLORS = ['#1b6ca8','#2a7d4f','#c9913a','#e07b54','#a8d8ea','#7b6fa0','#5a8a6a','#e8b86d'];
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function makeChart(id, type, labels, data, colors) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  chartInstances[id] = new Chart(ctx, {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors || COLORS,
+        borderColor: type === 'bar' ? (colors ? colors[0] : COLORS[0]) : '#fff',
+        borderWidth: type === 'bar' ? 0 : 2,
+        borderRadius: type === 'bar' ? 6 : 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: type !== 'bar', position: 'bottom', labels: { font: { family: 'Lato', size: 12 }, padding: 12 } },
+        tooltip: { titleFont: { family: 'DM Mono' }, bodyFont: { family: 'Lato' } }
+      },
+      scales: type === 'bar' ? {
+        x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 11 } } },
+        y: { grid: { color: '#eef2f5' }, ticks: { font: { family: 'DM Mono', size: 11 }, stepSize: 1 } }
+      } : {}
+    }
+  });
+}
+
+function cnt(key, val) { return responses.filter(r => r[key] === val).length; }
+function cntArr(key, val) { return responses.filter(r => Array.isArray(r[key]) && r[key].includes(val)).length; }
+
+function buildDashboard() {
+  const n = responses.length;
+  const visited = responses.filter(r => r.visitou === 'Sim');
+  const nv = visited.length;
+
+  // sub & banner
+  document.getElementById('dash-sub').textContent = `${n} respostas coletadas · ${nv} visitaram a cachoeira`;
+  document.getElementById('dash-banner').innerHTML =
+    `📌 <strong>${nv} de ${n} respondentes</strong> já visitaram a Cachoeira do Urubu. ` +
+    `A nota média de experiência é <strong>${nv ? (visited.reduce((s,r)=>s+r.experiencia,0)/nv).toFixed(1) : '—'} ⭐</strong>. ` +
+    `<strong>${cnt('qrcode','Sim')} pessoas</strong> usariam QR Codes no local.`;
+
+  // KPIs
+  const avgExp = nv ? (visited.reduce((s,r)=>s+(r.experiencia||0),0)/nv).toFixed(1) : '—';
+  const pctSeg = nv ? Math.round(cnt('seguro','Sim')/nv*100) : 0;
+  const pctOrg = nv ? Math.round(cnt('organizado','Sim')/nv*100) : 0;
+  const pctQR  = n  ? Math.round(cnt('qrcode','Sim')/n*100) : 0;
+  const pctTur = n  ? Math.round(cnt('turismo','Sim')/n*100) : 0;
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Respostas</div><div class="kpi-value" style="color:#1b6ca8">${n}</div><div class="kpi-sub">total coletadas</div></div>
+    <div class="kpi"><div class="kpi-label">Avaliação média</div><div class="kpi-value" style="color:#c9913a">${avgExp}★</div><div class="kpi-sub">de 5 estrelas</div></div>
+    <div class="kpi"><div class="kpi-label">Sentiram-se seguros</div><div class="kpi-value" style="color:#2a7d4f">${pctSeg}%</div><div class="kpi-sub">dos visitantes</div></div>
+    <div class="kpi"><div class="kpi-label">Local organizado</div><div class="kpi-value" style="color:#2a7d4f">${pctOrg}%</div><div class="kpi-sub">acharam que sim</div></div>
+    <div class="kpi"><div class="kpi-label">Usariam QR Code</div><div class="kpi-value" style="color:#1b6ca8">${pctQR}%</div><div class="kpi-sub">dos respondentes</div></div>
+    <div class="kpi"><div class="kpi-label">Atraem turistas</div><div class="kpi-value" style="color:#2a7d4f">${pctTur}%</div><div class="kpi-sub">acham que sim</div></div>
+  `;
+
+  // Charts
+  const idades = ['Menos de 15','15 a 18','19 a 25','26 a 35','36+'];
+  makeChart('ch-idade','bar', idades, idades.map(v=>cnt('idade',v)), COLORS);
+
+  makeChart('ch-comp','doughnut',
+    ['Amigos','Família','Sozinho(a)','Outro'],
+    ['Amigos','Família','Sozinho(a)','Outro'].map(v=>cnt('companhia',v)),
+    ['#1b6ca8','#2a7d4f','#c9913a','#e07b54']);
+
+  makeChart('ch-org','doughnut',
+    ['Sim','Mais ou menos','Não'],
+    ['Sim','Mais ou menos','Não'].map(v=>cnt('organizado',v)),
+    ['#2a7d4f','#c9913a','#e07b54']);
+
+  makeChart('ch-lixo','doughnut',
+    ['Sim, bastante','Um pouco','Não'],
+    ['Sim, bastante','Um pouco','Não'].map(v=>cnt('lixo',v)),
+    ['#e07b54','#c9913a','#2a7d4f']);
+
+  makeChart('ch-seg','doughnut',
+    ['Sim','Mais ou menos','Não'],
+    ['Sim','Mais ou menos','Não'].map(v=>cnt('seguro',v)),
+    ['#2a7d4f','#c9913a','#e07b54']);
+
+  makeChart('ch-qr','doughnut',
+    ['Sim','Talvez','Não'],
+    ['Sim','Talvez','Não'].map(v=>cnt('qrcode',v)),
+    ['#1b6ca8','#a8d8ea','#5a5346']);
+
+  const tipos = ['Mapa do local','Áreas seguras/perigosas','História da cachoeira','Curiosidades/lendas','Pontos de apoio (comida, banheiro)','Outro'];
+  makeChart('ch-tipos','bar', tipos, tipos.map(v=>cntArr('tiposInfo',v)), COLORS);
+
+  makeChart('ch-tur','doughnut',
+    ['Sim','Talvez','Não'],
+    ['Sim','Talvez','Não'].map(v=>cnt('turismo',v)),
+    ['#2a7d4f','#c9913a','#e07b54']);
+
+  const starDist = [1,2,3,4,5].map(s=>visited.filter(r=>r.experiencia===s).length);
+  makeChart('ch-stars','bar',['1★','2★','3★','4★','5★'],starDist,['#e07b54','#c9913a','#a8d8ea','#2a7d4f','#1b6ca8']);
+
+  // Table
+  const tbody = document.getElementById('resp-tbody');
+  tbody.innerHTML = '';
+  const last10 = responses.slice(-10).reverse();
+  last10.forEach((r, i) => {
+    const badge = v => {
+      if (v === 'Sim') return `<span class="badge badge-sim">Sim</span>`;
+      if (v === 'Não') return `<span class="badge badge-nao">Não</span>`;
+      if (v === 'Talvez') return `<span class="badge badge-talvez">Talvez</span>`;
+      return `<span class="badge badge-mm">${v}</span>`;
+    };
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${responses.length - i}</td>
+      <td>${r.idade || '—'}</td>
+      <td>${r.companhia || '—'}</td>
+      <td>${r.experiencia ? '★'.repeat(r.experiencia) : '—'}</td>
+      <td>${badge(r.organizado)}</td>
+      <td>${badge(r.seguro)}</td>
+      <td>${badge(r.qrcode)}</td>
+      <td>${badge(r.turismo)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+</script>
+</body>
+</html>
