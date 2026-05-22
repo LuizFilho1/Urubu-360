@@ -557,297 +557,422 @@
 </div>
 
 <!-- ══════════════════ SCRIPT ══════════════════ -->
-<script>
-// ── SEED DATA ──────────────────────────────────────────────────────────────
-let responses = [
-  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Um pouco",seguro:"Sim",placas:"Não",faltaInfo:"Sim",tiposInfo:["Mapa do local","Áreas seguras/perigosas"],qrcode:"Sim",incomodo:"Falta de sinalização",melhoria:"Mais placas",interessante:"Trilha guiada",turismo:"Sim"},
-  {visitou:"Sim",idade:"15 a 18",companhia:"Família",experiencia:4,organizado:"Mais ou menos",lixo:"Sim, bastante",seguro:"Mais ou menos",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Pontos de apoio (comida, banheiro)","Mapa do local"],qrcode:"Talvez",incomodo:"Lixo espalhado",melhoria:"Limpeza",interessante:"Banheiros limpos",turismo:"Sim"},
-  {visitou:"Sim",idade:"26 a 35",companhia:"Família",experiencia:3,organizado:"Não",lixo:"Sim, bastante",seguro:"Não",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","História da cachoeira"],qrcode:"Sim",incomodo:"Falta de segurança",melhoria:"Vigilância",interessante:"Guia turístico",turismo:"Sim"},
-  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Não",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["Curiosidades/lendas"],qrcode:"Sim",incomodo:"Acesso difícil",melhoria:"Estrada melhor",interessante:"QR Codes informativos",turismo:"Sim"},
-  {visitou:"Sim",idade:"36+",companhia:"Família",experiencia:4,organizado:"Mais ou menos",lixo:"Um pouco",seguro:"Sim",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Mapa do local","Pontos de apoio (comida, banheiro)"],qrcode:"Talvez",incomodo:"Sem lanchonete",melhoria:"Quiosques",interessante:"Estrutura de apoio",turismo:"Sim"},
-  {visitou:"Sim",idade:"15 a 18",companhia:"Amigos",experiencia:5,organizado:"Sim",lixo:"Um pouco",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["Curiosidades/lendas","História da cachoeira"],qrcode:"Sim",incomodo:"Muito cheio",melhoria:"Controle de acesso",interessante:"Eventos culturais",turismo:"Talvez"},
-  {visitou:"Sim",idade:"26 a 35",companhia:"Sozinho(a)",experiencia:2,organizado:"Não",lixo:"Sim, bastante",seguro:"Não",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","Mapa do local"],qrcode:"Não",incomodo:"Lixo e insegurança",melhoria:"Fiscalização",interessante:"Preservação",turismo:"Sim"},
-  {visitou:"Sim",idade:"19 a 25",companhia:"Amigos",experiencia:4,organizado:"Sim",lixo:"Não",seguro:"Sim",placas:"Sim",faltaInfo:"Não",tiposInfo:["História da cachoeira"],qrcode:"Sim",incomodo:"Sem estacionamento",melhoria:"Estacionamento",interessante:"App com mapa",turismo:"Sim"},
-  {visitou:"Sim",idade:"Menos de 15",companhia:"Família",experiencia:5,organizado:"Mais ou menos",lixo:"Um pouco",seguro:"Sim",placas:"Não percebi",faltaInfo:"Sim",tiposInfo:["Curiosidades/lendas","Mapa do local"],qrcode:"Sim",incomodo:"Não tem sorveteria",melhoria:"Lanchonete",interessante:"Atividades para crianças",turismo:"Sim"},
-  {visitou:"Sim",idade:"26 a 35",companhia:"Amigos",experiencia:3,organizado:"Mais ou menos",lixo:"Sim, bastante",seguro:"Mais ou menos",placas:"Não",faltaInfo:"Sim",tiposInfo:["Áreas seguras/perigosas","Pontos de apoio (comida, banheiro)"],qrcode:"Talvez",incomodo:"Muito lixo",melhoria:"Coleta seletiva",interessante:"Educação ambiental",turismo:"Sim"},
-];
+  <script type="module">
 
-// ── FORM STATE ──────────────────────────────────────────────────────────────
-const state = {
-  q1: null, q2: null, q3: null, q4: 0,
-  q5: null, q6: null, q7: null, q8: null, q9: null,
-  q10: null, q11: [], q12: null, q13: "", q14: "", q15: "", q16: null,
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  push,
+  get
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ───────── FIREBASE ───────── */
+
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO.firebaseapp.com",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_BUCKET.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
 };
 
-const starLabels = {1:"Muito ruim",2:"Ruim",3:"Regular",4:"Boa",5:"Muito boa"};
-let chartsBuilt = false;
+const app = initializeApp(firebaseConfig);
+
+const db = getDatabase(app);
+
+/* ───────── DATABASE ───────── */
+
+let responses = [];
+
+async function loadResponses() {
+
+  const snapshot = await get(
+    ref(db, "respostas")
+  );
+
+  responses = [];
+
+  if (snapshot.exists()) {
+
+    const data = snapshot.val();
+
+    responses = Object.values(data);
+
+  }
+
+}
+
+/* ───────── FORM STATE ───────── */
+
+const state = {
+  q1: null,
+  q2: null,
+  q3: null,
+  q4: 0,
+  q5: null,
+  q6: null,
+  q7: null,
+  q8: null,
+  q9: null,
+  q10: null,
+  q11: [],
+  q12: null,
+  q13: "",
+  q14: "",
+  q15: "",
+  q16: null,
+};
+
+const starLabels = {
+  1: "Muito ruim",
+  2: "Ruim",
+  3: "Regular",
+  4: "Boa",
+  5: "Muito boa"
+};
+
 let chartInstances = {};
 
-// ── BUILD OPTIONS ────────────────────────────────────────────────────────────
+/* ───────── OPTIONS ───────── */
+
 function radio(id, options, key) {
+
   const el = document.getElementById(id);
+
   options.forEach(opt => {
+
     const d = document.createElement('div');
+
     d.className = 'opt';
-    d.innerHTML = `<div class="opt-dot"></div><span class="opt-text">${opt}</span>`;
+
+    d.innerHTML = `
+      <div class="opt-dot"></div>
+      <span class="opt-text">${opt}</span>
+    `;
+
     d.onclick = () => {
+
       state[key] = opt;
-      el.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+
+      el.querySelectorAll('.opt')
+        .forEach(o => o.classList.remove('selected'));
+
       d.classList.add('selected');
-      document.getElementById('err-' + id).classList.remove('show');
+
+      const err = document.getElementById('err-' + id);
+
+      if (err) err.classList.remove('show');
+
       if (id === 'q1') handleQ1(opt);
+
     };
+
     el.appendChild(d);
+
   });
+
 }
 
 function checkbox(id, options, key) {
+
   const el = document.getElementById(id);
+
   options.forEach(opt => {
+
     const d = document.createElement('div');
+
     d.className = 'opt';
-    d.innerHTML = `<div class="opt-box"></div><span class="opt-text">${opt}</span>`;
+
+    d.innerHTML = `
+      <div class="opt-box"></div>
+      <span class="opt-text">${opt}</span>
+    `;
+
     d.onclick = () => {
+
       if (state[key].includes(opt)) {
-        state[key] = state[key].filter(v => v !== opt);
+
+        state[key] =
+          state[key].filter(v => v !== opt);
+
         d.classList.remove('selected');
+
       } else {
+
         state[key].push(opt);
+
         d.classList.add('selected');
+
       }
+
     };
+
     el.appendChild(d);
+
   });
+
 }
+
+/* ───────── Q1 ───────── */
 
 function handleQ1(val) {
-  const extra = document.getElementById('block-q2-q3');
-  const s2 = document.getElementById('section-exp');
-  const s3 = document.getElementById('section-seg');
-  const s4 = document.getElementById('section-info');
-  const s5 = document.getElementById('section-mel');
+
+  const extra =
+    document.getElementById('block-q2-q3');
+
+  const s2 =
+    document.getElementById('section-exp');
+
+  const s3 =
+    document.getElementById('section-seg');
+
+  const s4 =
+    document.getElementById('section-info');
+
+  const s5 =
+    document.getElementById('section-mel');
+
   if (val === 'Não') {
+
     extra.style.display = 'none';
-    s2.style.display = 'none'; s3.style.display = 'none';
-    s4.style.display = 'none'; s5.style.display = 'none';
+
+    s2.style.display = 'none';
+    s3.style.display = 'none';
+    s4.style.display = 'none';
+    s5.style.display = 'none';
+
   } else {
+
     extra.style.display = 'block';
-    s2.style.display = 'block'; s3.style.display = 'block';
-    s4.style.display = 'block'; s5.style.display = 'block';
+
+    s2.style.display = 'block';
+    s3.style.display = 'block';
+    s4.style.display = 'block';
+    s5.style.display = 'block';
+
   }
+
 }
+
+/* ───────── STARS ───────── */
 
 function setStar(val) {
+
   state.q4 = val;
-  document.querySelectorAll('.star').forEach((s, i) => {
-    s.classList.toggle('lit', i < val);
-  });
-  document.getElementById('star-label').textContent = starLabels[val];
-  document.getElementById('err-q4').classList.remove('show');
-}
 
-// hover stars
-document.querySelectorAll('.star').forEach(s => {
-  s.addEventListener('mouseenter', () => {
-    const v = +s.dataset.v;
-    document.querySelectorAll('.star').forEach((st, i) => st.classList.toggle('lit', i < v));
-    document.getElementById('star-label').textContent = starLabels[v];
-  });
-  s.addEventListener('mouseleave', () => {
-    document.querySelectorAll('.star').forEach((st, i) => st.classList.toggle('lit', i < state.q4));
-    document.getElementById('star-label').textContent = state.q4 ? starLabels[state.q4] : '';
-  });
-});
+  document.querySelectorAll('.star')
+    .forEach((s, i) => {
 
-// ── INIT OPTIONS ─────────────────────────────────────────────────────────────
-radio('q1',  ['Sim','Não'], 'q1');
-radio('q2',  ['Menos de 15','15 a 18','19 a 25','26 a 35','36+'], 'q2');
-radio('q3',  ['Amigos','Família','Sozinho(a)','Outro'], 'q3');
-radio('q5',  ['Sim','Mais ou menos','Não'], 'q5');
-radio('q6',  ['Sim, bastante','Um pouco','Não'], 'q6');
-radio('q7',  ['Sim','Mais ou menos','Não'], 'q7');
-radio('q8',  ['Sim','Não','Não percebi'], 'q8');
-radio('q9',  ['Sim','Não'], 'q9');
-radio('q10', ['Sim','Não'], 'q10');
-checkbox('q11', ['Mapa do local','Áreas seguras/perigosas','História da cachoeira','Curiosidades/lendas','Pontos de apoio (comida, banheiro)','Outro'], 'q11');
-radio('q12', ['Sim','Talvez','Não'], 'q12');
-radio('q16', ['Sim','Não','Talvez'], 'q16');
+      s.classList.toggle('lit', i < val);
 
-// ── SUBMIT ───────────────────────────────────────────────────────────────────
-function submitForm() {
-  let valid = true;
-  const required = ['q1','q2','q3','q5','q6','q7','q8','q9','q10','q12','q16'];
-  if (!state.q1) { document.getElementById('err-q1').classList.add('show'); valid = false; }
-
-  if (state.q1 === 'Sim') {
-    required.forEach(k => {
-      if (!state[k]) {
-        const e = document.getElementById('err-' + k);
-        if (e) { e.classList.add('show'); valid = false; }
-      }
     });
-    if (!state.q4) { document.getElementById('err-q4').classList.add('show'); valid = false; }
+
+  document.getElementById('star-label')
+    .textContent = starLabels[val];
+
+  document.getElementById('err-q4')
+    .classList.remove('show');
+
+}
+
+window.setStar = setStar;
+
+/* ───────── INIT QUESTIONS ───────── */
+
+radio('q1', ['Sim', 'Não'], 'q1');
+
+radio('q2',
+[
+  'Menos de 15',
+  '15 a 18',
+  '19 a 25',
+  '26 a 35',
+  '36+'
+], 'q2');
+
+radio('q3',
+[
+  'Amigos',
+  'Família',
+  'Sozinho(a)',
+  'Outro'
+], 'q3');
+
+radio('q5',
+[
+  'Sim',
+  'Mais ou menos',
+  'Não'
+], 'q5');
+
+radio('q6',
+[
+  'Sim, bastante',
+  'Um pouco',
+  'Não'
+], 'q6');
+
+radio('q7',
+[
+  'Sim',
+  'Mais ou menos',
+  'Não'
+], 'q7');
+
+radio('q8',
+[
+  'Sim',
+  'Não',
+  'Não percebi'
+], 'q8');
+
+radio('q9',
+[
+  'Sim',
+  'Não'
+], 'q9');
+
+radio('q10',
+[
+  'Sim',
+  'Não'
+], 'q10');
+
+checkbox('q11',
+[
+  'Mapa do local',
+  'Áreas seguras/perigosas',
+  'História da cachoeira',
+  'Curiosidades/lendas',
+  'Pontos de apoio (comida, banheiro)',
+  'Outro'
+], 'q11');
+
+radio('q12',
+[
+  'Sim',
+  'Talvez',
+  'Não'
+], 'q12');
+
+radio('q16',
+[
+  'Sim',
+  'Não',
+  'Talvez'
+], 'q16');
+
+/* ───────── SUBMIT ───────── */
+
+async function submitForm() {
+
+  state.q13 =
+    document.getElementById('q13').value;
+
+  state.q14 =
+    document.getElementById('q14').value;
+
+  state.q15 =
+    document.getElementById('q15').value;
+
+  await push(ref(db, "respostas"), {
+
+    visitou: state.q1,
+    idade: state.q2,
+    companhia: state.q3,
+    experiencia: state.q4,
+    organizado: state.q5,
+    lixo: state.q6,
+    seguro: state.q7,
+    placas: state.q8,
+    faltaInfo: state.q9,
+    tiposInfo: [...state.q11],
+    qrcode: state.q12,
+    incomodo: state.q13,
+    melhoria: state.q14,
+    interessante: state.q15,
+    turismo: state.q16,
+    criadoEm: Date.now()
+
+  });
+
+  document.getElementById('form-container')
+    .style.display = 'none';
+
+  document.getElementById('success-box')
+    .style.display = 'block';
+
+}
+
+window.submitForm = submitForm;
+
+/* ───────── PAGE ───────── */
+
+async function showPage(p) {
+
+  document.querySelectorAll('.page')
+    .forEach(el => el.classList.remove('active'));
+
+  document.getElementById('page-' + p)
+    .classList.add('active');
+
+  if (p === 'dash') {
+
+    await loadResponses();
+
+    buildDashboard();
+
   }
 
-  if (!valid) {
-    document.querySelector('.err.show')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  state.q13 = document.getElementById('q13').value;
-  state.q14 = document.getElementById('q14').value;
-  state.q15 = document.getElementById('q15').value;
-
-  responses.push({ ...state, tiposInfo: [...state.q11] });
-
-  document.getElementById('form-container').style.display = 'none';
-  document.getElementById('success-box').style.display = 'block';
-  chartsBuilt = false;
 }
 
-// ── PAGE SWITCH ───────────────────────────────────────────────────────────────
-function showPage(p) {
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && p === 'form') || (i === 1 && p === 'dash'));
-  });
-  document.getElementById('page-' + p).classList.add('active');
-  if (p === 'dash') buildDashboard();
+window.showPage = showPage;
+
+/* ───────── DASHBOARD ───────── */
+
+function cnt(key, val) {
+
+  return responses.filter(r =>
+    r[key] === val
+  ).length;
+
 }
-
-// ── DASHBOARD ────────────────────────────────────────────────────────────────
-const COLORS = ['#1b6ca8','#2a7d4f','#c9913a','#e07b54','#a8d8ea','#7b6fa0','#5a8a6a','#e8b86d'];
-
-function destroyChart(id) {
-  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
-}
-
-function makeChart(id, type, labels, data, colors) {
-  destroyChart(id);
-  const ctx = document.getElementById(id).getContext('2d');
-  chartInstances[id] = new Chart(ctx, {
-    type,
-    data: {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: colors || COLORS,
-        borderColor: type === 'bar' ? (colors ? colors[0] : COLORS[0]) : '#fff',
-        borderWidth: type === 'bar' ? 0 : 2,
-        borderRadius: type === 'bar' ? 6 : 0,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: { display: type !== 'bar', position: 'bottom', labels: { font: { family: 'Lato', size: 12 }, padding: 12 } },
-        tooltip: { titleFont: { family: 'DM Mono' }, bodyFont: { family: 'Lato' } }
-      },
-      scales: type === 'bar' ? {
-        x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 11 } } },
-        y: { grid: { color: '#eef2f5' }, ticks: { font: { family: 'DM Mono', size: 11 }, stepSize: 1 } }
-      } : {}
-    }
-  });
-}
-
-function cnt(key, val) { return responses.filter(r => r[key] === val).length; }
-function cntArr(key, val) { return responses.filter(r => Array.isArray(r[key]) && r[key].includes(val)).length; }
 
 function buildDashboard() {
-  const n = responses.length;
-  const visited = responses.filter(r => r.visitou === 'Sim');
-  const nv = visited.length;
 
-  // sub & banner
-  document.getElementById('dash-sub').textContent = `${n} respostas coletadas · ${nv} visitaram a cachoeira`;
-  document.getElementById('dash-banner').innerHTML =
-    `📌 <strong>${nv} de ${n} respondentes</strong> já visitaram a Cachoeira do Urubu. ` +
-    `A nota média de experiência é <strong>${nv ? (visited.reduce((s,r)=>s+r.experiencia,0)/nv).toFixed(1) : '—'} ⭐</strong>. ` +
-    `<strong>${cnt('qrcode','Sim')} pessoas</strong> usariam QR Codes no local.`;
+  document.getElementById('dash-sub')
+    .textContent =
+    `${responses.length} respostas coletadas`;
 
-  // KPIs
-  const avgExp = nv ? (visited.reduce((s,r)=>s+(r.experiencia||0),0)/nv).toFixed(1) : '—';
-  const pctSeg = nv ? Math.round(cnt('seguro','Sim')/nv*100) : 0;
-  const pctOrg = nv ? Math.round(cnt('organizado','Sim')/nv*100) : 0;
-  const pctQR  = n  ? Math.round(cnt('qrcode','Sim')/n*100) : 0;
-  const pctTur = n  ? Math.round(cnt('turismo','Sim')/n*100) : 0;
-
-  document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Respostas</div><div class="kpi-value" style="color:#1b6ca8">${n}</div><div class="kpi-sub">total coletadas</div></div>
-    <div class="kpi"><div class="kpi-label">Avaliação média</div><div class="kpi-value" style="color:#c9913a">${avgExp}★</div><div class="kpi-sub">de 5 estrelas</div></div>
-    <div class="kpi"><div class="kpi-label">Sentiram-se seguros</div><div class="kpi-value" style="color:#2a7d4f">${pctSeg}%</div><div class="kpi-sub">dos visitantes</div></div>
-    <div class="kpi"><div class="kpi-label">Local organizado</div><div class="kpi-value" style="color:#2a7d4f">${pctOrg}%</div><div class="kpi-sub">acharam que sim</div></div>
-    <div class="kpi"><div class="kpi-label">Usariam QR Code</div><div class="kpi-value" style="color:#1b6ca8">${pctQR}%</div><div class="kpi-sub">dos respondentes</div></div>
-    <div class="kpi"><div class="kpi-label">Atraem turistas</div><div class="kpi-value" style="color:#2a7d4f">${pctTur}%</div><div class="kpi-sub">acham que sim</div></div>
-  `;
-
-  // Charts
-  const idades = ['Menos de 15','15 a 18','19 a 25','26 a 35','36+'];
-  makeChart('ch-idade','bar', idades, idades.map(v=>cnt('idade',v)), COLORS);
-
-  makeChart('ch-comp','doughnut',
-    ['Amigos','Família','Sozinho(a)','Outro'],
-    ['Amigos','Família','Sozinho(a)','Outro'].map(v=>cnt('companhia',v)),
-    ['#1b6ca8','#2a7d4f','#c9913a','#e07b54']);
-
-  makeChart('ch-org','doughnut',
-    ['Sim','Mais ou menos','Não'],
-    ['Sim','Mais ou menos','Não'].map(v=>cnt('organizado',v)),
-    ['#2a7d4f','#c9913a','#e07b54']);
-
-  makeChart('ch-lixo','doughnut',
-    ['Sim, bastante','Um pouco','Não'],
-    ['Sim, bastante','Um pouco','Não'].map(v=>cnt('lixo',v)),
-    ['#e07b54','#c9913a','#2a7d4f']);
-
-  makeChart('ch-seg','doughnut',
-    ['Sim','Mais ou menos','Não'],
-    ['Sim','Mais ou menos','Não'].map(v=>cnt('seguro',v)),
-    ['#2a7d4f','#c9913a','#e07b54']);
-
-  makeChart('ch-qr','doughnut',
-    ['Sim','Talvez','Não'],
-    ['Sim','Talvez','Não'].map(v=>cnt('qrcode',v)),
-    ['#1b6ca8','#a8d8ea','#5a5346']);
-
-  const tipos = ['Mapa do local','Áreas seguras/perigosas','História da cachoeira','Curiosidades/lendas','Pontos de apoio (comida, banheiro)','Outro'];
-  makeChart('ch-tipos','bar', tipos, tipos.map(v=>cntArr('tiposInfo',v)), COLORS);
-
-  makeChart('ch-tur','doughnut',
-    ['Sim','Talvez','Não'],
-    ['Sim','Talvez','Não'].map(v=>cnt('turismo',v)),
-    ['#2a7d4f','#c9913a','#e07b54']);
-
-  const starDist = [1,2,3,4,5].map(s=>visited.filter(r=>r.experiencia===s).length);
-  makeChart('ch-stars','bar',['1★','2★','3★','4★','5★'],starDist,['#e07b54','#c9913a','#a8d8ea','#2a7d4f','#1b6ca8']);
-
-  // Table
-  const tbody = document.getElementById('resp-tbody');
-  tbody.innerHTML = '';
-  const last10 = responses.slice(-10).reverse();
-  last10.forEach((r, i) => {
-    const badge = v => {
-      if (v === 'Sim') return `<span class="badge badge-sim">Sim</span>`;
-      if (v === 'Não') return `<span class="badge badge-nao">Não</span>`;
-      if (v === 'Talvez') return `<span class="badge badge-talvez">Talvez</span>`;
-      return `<span class="badge badge-mm">${v}</span>`;
-    };
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${responses.length - i}</td>
-      <td>${r.idade || '—'}</td>
-      <td>${r.companhia || '—'}</td>
-      <td>${r.experiencia ? '★'.repeat(r.experiencia) : '—'}</td>
-      <td>${badge(r.organizado)}</td>
-      <td>${badge(r.seguro)}</td>
-      <td>${badge(r.qrcode)}</td>
-      <td>${badge(r.turismo)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
+
 </script>
 </body>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDFETmPny2_jpx1LIVp_p0RQ3EsDu9DeBc",
+    authDomain: "urubu360-f58e2.firebaseapp.com",
+    projectId: "urubu360-f58e2",
+    storageBucket: "urubu360-f58e2.firebasestorage.app",
+    messagingSenderId: "380592990627",
+    appId: "1:380592990627:web:dec4ae913e160b0a591216",
+    measurementId: "G-X9W0322WQT"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </html>
